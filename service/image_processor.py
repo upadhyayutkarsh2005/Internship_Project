@@ -1,10 +1,10 @@
 import base64
 import os
-import imghdr
 import json
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import filetype
 
 load_dotenv()
 
@@ -26,14 +26,23 @@ class ImageProcessor:
         self.prompt = prompt or "What is this?"
 
 
+   
+        
     def get_mime_type(self, path):
-        img_type = imghdr.what(path)
-        ext = os.path.splitext(path)[1].lower()
-        return f"image/{img_type}" if img_type else {
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg'
-        }.get(ext, 'image/jpeg')
+    # Read the first few bytes to guess type
+      with open(path, "rb") as f:
+        kind = filetype.guess(f.read(262))  # 262 bytes is enough for most formats
+
+      if kind and kind.mime.startswith("image/"):
+        return kind.mime
+
+    # Fallback based on file extension
+      ext = os.path.splitext(path)[1].lower()
+      return {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg'
+    }.get(ext, 'image/jpeg')
 
     def encode_image(self, path):
         with open(path, "rb") as f:
