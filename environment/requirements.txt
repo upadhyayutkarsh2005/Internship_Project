@@ -19,3 +19,4 @@ pdfplumber
 shap
 xgboost
 tf-keras
+filetype
