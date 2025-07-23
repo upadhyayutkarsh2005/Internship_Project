@@ -22,9 +22,10 @@ class TransactionCategorizer:
                 st.session_state.spacy_nlp_model = spacy.load("en_core_web_sm")
             return st.session_state.spacy_nlp_model
         except OSError:
-            st.error("SpaCy model 'en_core_web_sm' not found. Please run: `python -m spacy download en_core_web_sm` in your terminal.")
-            st.stop()
-            return None
+    # Download the model if not present
+                from spacy.cli import download
+                download("en_core_web_sm")
+                self.nlp = spacy.load("en_core_web_sm")
 
     def _initialize_session_state(self):
         if "rules_ui" not in st.session_state:

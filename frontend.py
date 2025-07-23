@@ -8,11 +8,22 @@ import os
 from datetime import datetime, date
 import time
 from datetime import datetime, date
-from service.update1 import transaction_categorization_app
+from dotenv import load_dotenv
+load_dotenv()
+
+
+
 
 st.set_page_config(page_title="🧾 Receipt & Invoice Parser", page_icon="🧾", layout="wide")
 
 st.title("🧾 Smart Receipt/Invoice/Bank Statement Parser")
+
+
+
+#BASE_URL = "hhttps://644db7a87e70.ngrok-free.app "
+BASE_URL = os.getenv("BASE_URL" , "http://backend:8000" )  # Update with your FastAPI backend URL
+
+
 
 # Tabs setup
 tab1, tab2, tab3 , tab4 ,tab5 , tab6 , tab7 , tab8= st.tabs([
@@ -39,7 +50,7 @@ with tab1:
     if pdf_file and st.button(f"🚀 Extract {doc_type}", key=f"extract_{doc_type.lower()}_btn"):
         with st.spinner(f"🔍 Analyzing {doc_type.lower()}..."):
             try:
-                endpoint = "http://localhost:8000/parse-invoice/" if doc_type == "Invoice" else "http://localhost:8000/parse-receipt/"
+                endpoint = f"{BASE_URL}/parse-invoice/" if doc_type == "Invoice" else f"{BASE_URL}parse-receipt/"
                 response = requests.post(
                     endpoint,
                     files={"file": (pdf_file.name, pdf_file.getvalue(), pdf_file.type)},
@@ -126,7 +137,7 @@ with tab2:
                 try:
                     with open(tmp_path, "rb") as f:
                         files = {"file": (uploaded_file.name, f, uploaded_file.type)}
-                        endpoint = "http://localhost:8000/api/invoice" if doc_type == "Invoice" else "http://localhost:8000/api/receipt"
+                        endpoint = f"{BASE_URL}/api/invoice" if doc_type == "Invoice" else f"{BASE_URL}/api/receipt"
                         response = requests.post(endpoint, files=files)
                     response.raise_for_status()
                     json_data = response.json()
@@ -248,7 +259,7 @@ with tab3:
 
         try:
             response = requests.post(
-                "http://localhost:8000/process-bank-statement/",
+                f"{BASE_URL}/process-bank-statement/",
                 files={"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)},
                 timeout=600
             )
@@ -304,9 +315,7 @@ with tab3:
         except Exception as e:
             st.error(f"⚠️ Failed to process file: {str(e)}")
 
-with tab4:
-    transaction_categorization_app()
-     
+
 
     
 with tab5:
@@ -355,7 +364,7 @@ with tab5:
             st.session_state.confirmed_transactions = []
 
     # --- Category Prediction API Call ---
-    def get_recommend_category( description , money_in , money_out, api_url="http://localhost:8000/recommend-category"):
+    def get_recommend_category( description , money_in , money_out, api_url=f"{BASE_URL}/recommend-category"):
         #print("get recommend category")
         try:
             response = requests.post(api_url, json={
@@ -610,7 +619,7 @@ with tab6:
             }
 
             try:
-                response = requests.post("http://localhost:8000/predict", json=transaction)
+                response = requests.post(f"{BASE_URL}/predict", json=transaction)
                 if response.status_code == 200:
                     st.session_state.single_result = response.json()
                 else:
@@ -632,7 +641,7 @@ with tab6:
     
 
 with tab7:
-    BASE_URL = "http://localhost:8000"
+    
 
     st.set_page_config(page_title="Duplicate & Anomaly Detection Dashboard", layout="wide")
     st.title("🧠 Duplicate & Anomaly Detection Dashboard")
