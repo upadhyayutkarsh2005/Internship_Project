@@ -1,15 +1,29 @@
-FROM python:3.11-slim
+# Use Windows Server Core base image
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
 
+# Install Chocolatey
+RUN powershell -NoProfile -ExecutionPolicy Bypass -Command \
+    Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))    
+
+# Install Python via Chocolatey
+RUN choco install -y python
+
+# Add Python to PATH
+ENV PATH="C:\\Python311\\Scripts;C:\\Python311;${PATH}"
+
+# Set working directory
 WORKDIR /app
 
-# Install dependencies
+# Copy requirements and install them
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy only frontend script
-COPY frontend.py  .
-COPY service/ ./service/
+# Copy frontend app
+COPY frontend.py .
 
+# Expose Streamlit port
 EXPOSE 8501
 
+# Run Streamlit app
 CMD ["streamlit", "run", "frontend.py", "--server.port=8501", "--server.address=0.0.0.0"]

@@ -1,17 +1,31 @@
-FROM python:3.11-slim
+# Use a Windows base image with Python pre-installed
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
 
-RUN apt-get update && apt-get install -y \
-    poppler-utils \
-    tesseract-ocr \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install Chocolatey (Windows package manager)
+RUN powershell -NoProfile -ExecutionPolicy Bypass -Command \
+    Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
+# Install Python, Tesseract, and Poppler using Chocolatey
+RUN choco install -y python \
+    && choco install -y tesseract \
+    && choco install -y poppler
+
+# Add Python to PATH
+ENV PATH="C:\\Python311\\Scripts;C:\\Python311;${PATH}"
+
+# Set working directory
 WORKDIR /app
 
+# Copy requirements and install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
+# Copy all project files
 COPY . .
 
+# Expose FastAPI port
 EXPOSE 8000
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run FastAPI using uvicorn
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
