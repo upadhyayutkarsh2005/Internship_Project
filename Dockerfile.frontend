@@ -2,10 +2,9 @@
 FROM mcr.microsoft.com/windows/servercore:ltsc2022
 
 # Install Chocolatey
-# Download and install Python silently
-RUN Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.10.4/python-3.10.4-amd64.exe" -OutFile "python-installer.exe" ; \
-    Start-Process "python-installer.exe" -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" -NoNewWindow -Wait ; \
-    Remove-Item "python-installer.exe"    
+RUN powershell -NoProfile -ExecutionPolicy Bypass -Command \
+    Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))    
 
 # Install Python via Chocolatey
 RUN choco install -y python
@@ -18,7 +17,7 @@ WORKDIR /app
 
 # Copy requirements and install them
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy frontend app
 COPY frontend.py .
